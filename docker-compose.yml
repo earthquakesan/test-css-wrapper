@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  csswrapper:
+    image: bde2020/nginx-proxy-with-css
+    ports:
+      - "80:80"
+    volumes:
+      -  /var/run/docker.sock:/tmp/docker.sock:ro
+
+  service:
+    image: nginx
+    environment:
+      VIRTUAL_HOST: "service.default.port"
+      VIRTUAL_PORT: "80"
+    links:
+      - csswrapper
+
+  service-custom-port:
+    image: acaranta/mediadrop
+    environment:
+      VIRTUAL_HOST: "service.custom.port"
+      VIRTUAL_PORT: "8080"
+    links:
+      - csswrapper
+
+  namenode:
+    image: bde2020/hadoop-namenode:1.0.0
+    links:
+      - csswrapper
+    volumes:
+      - ./data/namenode:/hadoop/dfs/name
+    expose:
+      - "50070"
+    environment:
+      CLUSTER_NAME: "test"
+      VIRTUAL_HOST: "namenode.big-data-europe.local"
+      VIRTUAL_PORT: "50070"
+      CSS_SOURCE: "hadoop"
+    env_file:
+      - ./hadoop.env
+
